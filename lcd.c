@@ -1,49 +1,64 @@
 #include<avr/io.h>
 #include<util/delay.h>
 
-#define RS 0
-#define en 2
-
+#define RS PB0
+#define RW PB1
+#define EN PB2
+#define lcdPort PORTA
 
 void sendCommand(unsigned char command)
 {
-    PORTA=command;
-    //////////GIVING COMMAND
-    PORTB&=~(1<<RS);
-    PORTB|=(1<<en);
-    //////////////
+    lcdPort =command;
+    PORTB &=~(1<<RS);
+    PORTB &=~(1<<RW);
+    PORTB|=(1<<EN);
     _delay_ms(50);
+
 
 }
 
-
-void sendCharacter(unsigned char character)
+void ledIntIt()
 {
-    PORTA  =(character);
+    //8bit mode
+    sendCommand(0x38);
+    _delay_ms(10);
+    ///clear Display
+    sendCommand(0x01);
+    _delay_ms(10);
+    ///return home
+    sendCommand(0x02);
+    _delay_ms(10);
+    ///make increment in the cursor 
+    sendCommand(0x06);
+    _delay_ms(10);
+
+    sendCommand(0X80);
+    _delay_ms(10);
+    
+}
+
+void lcdWrite(unsigned char letters)
+{
+    lcdPort=letters;
+    ////setting lcd in write mode(RW=0) and RS as 1 to write
     PORTB |=(1<<RS);
-    PORTB |=(1<<en);
-    _delay_ms(50);
-    PORTB  &=~(1<<en);
-    /////clearing the command
-    PORTA=0;
+    PORTB &=~(1<<RW);
+    PORTB |=(1<<EN);
+    _delay_ms(10);
+    PORTB &=~(1<<EN);
 }
 
 int main()
 {
-    /////SETTING AS OUTPUT PINS
-    DDRA |=(0XFF);
-    DDRB|=(1<<PB0);
-    DDRB|=(1<<PB1);
-    DDRB|=(1<<PB2);
+    DDRA =0Xff;
+    DDRB |=(1<<RS);
+    DDRB |=(1<<RW);
+    DDRB |=(1<<EN);
+    ledIntIt();
+    _delay_ms(10);
+    lcdWrite(0x56);
     _delay_ms(50);
-
-    sendCommand(0X01);////clear screen
-    sendCharacter(0X38);////16*2 lcd mode
-    sendCharacter(0x0E);///screen and cursor on
-
-    ////sending the character 
-    sendCharacter(0x56);
-    sendCharacter(0x45);
-    sendCharacter(0x53);
-    ////
+    lcdWrite(0x45);
+    lcdWrite(0x53);
+    return 0;
 }
