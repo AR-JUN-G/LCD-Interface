@@ -1,64 +1,86 @@
 #include<avr/io.h>
 #include<util/delay.h>
 
-#define RS PB0
-#define RW PB1
-#define EN PB2
 #define lcdPort PORTA
+#define controlPort PORTB
+#define lcdPin PINA
+#define EN PORTB2
+#define RW PORTB1
+#define RS PORTB0
 
-void sendCommand(unsigned char command)
+
+
+void enablePulse()
 {
-    lcdPort =command;
-    PORTB &=~(1<<RS);
-    PORTB &=~(1<<RW);
-    PORTB|=(1<<EN);
-    _delay_ms(50);
-
-
+    controlPort |=(1<<EN);
+    _delay_ms(10);
+    controlPort &=~(1<<EN);
 }
 
-void ledIntIt()
+
+
+void lcdWriteCommand(unsigned char cmd)
 {
+    controlPort &=~(1<<RW);
+    controlPort &=~(1<<RS);
+    enablePulse();  ////give high to low pulse
+    lcdPort =(cmd)|(lcdPin & 0xff);
+    enablePulse(); 
+    _delay_us(100);
+}
+
+void lcdWriteData(unsigned char data)
+{
+    controlPort &=~(1<<RW);
+    controlPort |=(1<<RS);
+    enablePulse();  ////give high to low pulse
+    lcdPort =(data)|(lcdPin & 0xff);
+    enablePulse(); 
+    _delay_us(100);
+}
+
+void lcdWriteChar(char ch)
+{
+    lcdWriteData(ch);
+}
+
+void lcdWriteString(char *str)
+{
+    while(*str)
+    {
+            lcdWriteData(*str);
+            str++;
+    }
+}
+
+void lcdInit()
+{
+    lcdPort |=1<<PORT0 |1<<PORT1 |1<<PORT2 |1<<PORT3 |1<<PORT4 |
+                1<<PORT5 |1<<PORT6 |1<<PORT7 ;
+    controlPort |=1<<EN |1<<RS | 1<<RW;
     //8bit mode
-    sendCommand(0x38);
+    lcdWriteCommand(0x38);
     _delay_ms(10);
     ///clear Display
-    sendCommand(0x01);
-    _delay_ms(10);
-    ///return home
-    sendCommand(0x02);
-    _delay_ms(10);
-    ///make increment in the cursor 
-    sendCommand(0x06);
+    lcdWriteCommand(0x01);
     _delay_ms(10);
 
-    sendCommand(0X80);
+    ///return home
+    lcdWriteCommand(0x02);
+    _delay_ms(10);
+
+    ///make increment in the cursor 
+    lcdWriteCommand(0x06);
+    _delay_ms(10);
+
+    lcdWriteCommand(0X80);
     _delay_ms(10);
     
 }
-
-void lcdWrite(unsigned char letters)
-{
-    lcdPort=letters;
-    ////setting lcd in write mode(RW=0) and RS as 1 to write
-    PORTB |=(1<<RS);
-    PORTB &=~(1<<RW);
-    PORTB |=(1<<EN);
-    _delay_ms(10);
-    PORTB &=~(1<<EN);
-}
-
 int main()
 {
-    DDRA =0Xff;
-    DDRB |=(1<<RS);
-    DDRB |=(1<<RW);
-    DDRB |=(1<<EN);
-    ledIntIt();
-    _delay_ms(10);
-    lcdWrite(0x56);
-    _delay_ms(50);
-    lcdWrite(0x45);
-    lcdWrite(0x53);
-    return 0;
+    lcdInit();
+    lcdWriteString("Hello ALL");
+    lcdWriteData("h");
+
 }
