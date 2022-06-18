@@ -5,7 +5,6 @@
 #define CONTROLDDR DDRB
 #define lcdPort PORTA
 #define controlPort PORTB
-//#define lcdPin PINA
 #define EN PB2
 #define RW PB1
 #define RS PB0
@@ -31,8 +30,9 @@ void lcdWriteCommand(uint8_t cmd)
     {
         _delay_us(1530);
     }
-    else{
-        _delay_us(50);
+    else
+    {
+        _delay_us(100);
     }
 }
 
@@ -48,6 +48,7 @@ void lcdWriteData(uint8_t data)
 void lcdWriteChar(const char ch)
 {
     lcdWriteData(ch);
+    _delay_us(80);
 }
 
 void lcdWriteString(const char *str) ///const 
@@ -56,6 +57,7 @@ void lcdWriteString(const char *str) ///const
     {
             lcdWriteData(*str);
             str++;
+            _delay_us(80);
     }
 }
 
@@ -70,12 +72,6 @@ void lcdInit()
 
     ///return home
     lcdWriteCommand(0x02);
-
-    ///make increment in the cursor 
-    //lcdWriteCommand(0x06);
-
-    //lcdWriteCommand(0X80);
-    
 }
 
 void lcdGoto(uint8_t byte,uint8_t line)
@@ -100,9 +96,5 @@ int main()
     CONTROLDDR |=(1<<EN) | (1<<RW) | (1<<RS);
     
     lcdInit();
-    lcdGoto(0,1);
     lcdWriteString("Hello ALL");
-
-    //lcdWriteChar('A');
-
 }
