@@ -28,10 +28,9 @@ void lcdWriteCommand(uint8_t cmd)
     enablePulse();  ////give high to low pulse
     if(cmd == 0x01 || cmd ==0x02)
     {
-        _delay_us(1530);
+        _delay_us(2000);
     }
-    else
-    {
+    else{
         _delay_us(100);
     }
 }
@@ -63,7 +62,6 @@ void lcdWriteString(const char *str) ///const
 
 void lcdInit()
 {
-
     //8bit mode
     lcdWriteCommand(0x38);
 
@@ -72,6 +70,12 @@ void lcdInit()
 
     ///return home
     lcdWriteCommand(0x02);
+
+    ///make increment in the cursor 
+    //lcdWriteCommand(0x06);
+
+    //lcdWriteCommand(0X80);
+    
 }
 
 void lcdGoto(uint8_t byte,uint8_t line)
@@ -92,9 +96,12 @@ int main()
 
     LCDDDR =0xFF;
     lcdPort=0X00;
-    
     CONTROLDDR |=(1<<EN) | (1<<RW) | (1<<RS);
+    controlPort =0x00;
+    
     
     lcdInit();
     lcdWriteString("Hello ALL");
+
+
 }
